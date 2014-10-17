@@ -50,10 +50,12 @@ adfisher.collect_sites_from_alexa(nsites=5, output_file=site_file,
 # Set up treatments
 
 treatment1 = adfisher.Treatment("female")
+treatment1.opt_in()
 treatment1.set_gender("female")
 treatment1.visit_sites(site_file)
 
 treatment2 = adfisher.Treatment("male")
+treatment2.opt_in()
 treatment2.set_gender("male")
 treatment2.visit_sites(site_file)
 
