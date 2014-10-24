@@ -27,7 +27,7 @@ To carry out the data analysis requires the following packages:
 import nltk
 nltk.download()
 ``` 
-* This sometimes does not work on Ubuntu. In that case, run ```sudo apt-get install python-numpy python-scipy python-matplotlib```
+pip* sometimes cannot install numpy, scipy, matplotlib on Ubuntu. In that case, run ```sudo apt-get install python-numpy python-scipy python-matplotlib```
 NumPy and SciPy are Python packages for scientific computing. matplotlib enables plotting functions. 
 scikit learn has a vast collection of python implemenations of Machine Learning algorithms, 
 built on the NumPy, SciPy, and matplotlib packages. 
