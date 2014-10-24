@@ -17,7 +17,7 @@ In order to run experiments for data collection, you will need the following pac
 Selenium is a web-browser automation framework. Xvfb allows for headless testing. 
 xvfbwrapper is a python wrapper for the same. 
 The Xvfb package is not present on OS X, but you still have to install xvfbwrapper.
-To carry out the data analysis requires the following packages:
+To carry out the data analysis, you require the following packages:
   - numpy, scipy, matplotlib ```sudo pip install numpy scipy matplotlib```*
   - scikit learn ```sudo pip install scikit-learn```
   - stemming ```sudo pip install stemming```
