@@ -107,7 +107,7 @@ def new_p_test(X_test, y_test, clf):							# permutation test
 			under += 1
 	return (1.0*under) / (1.0*len(a))
 	
-def block_p_test_mode2(Xtest, ytest, flipped=False, alpha=0.01, iterations=100000):				# block permutation test
+def block_p_test_mode2(Xtest, ytest, flipped=False, alpha=0.01, iterations=1000):	# block p-test with kw
 	factor = 1
 	if(flipped):
 		factor = -1
@@ -121,7 +121,7 @@ def block_p_test_mode2(Xtest, ytest, flipped=False, alpha=0.01, iterations=10000
 		Tpi = factor*stat_kw2(Xtest, yperm)
 		if round(Tobs, 10) <= round(Tpi, 10):
 			under += 1
-	print "\nConfidence Interval of p-value:", proportion_confint(under, iterations, alpha, 'beta')
+	print proportion_confint(under, iterations, alpha, 'beta')
 	return (1.0*under) / (1.0*iterations)
 		
 def block_p_test(oXtest, oytest, clf, alpha=0.01, iterations=1000000):				# block permutation test
@@ -138,7 +138,7 @@ def block_p_test(oXtest, oytest, clf, alpha=0.01, iterations=1000000):				# bloc
 		Tpi = stat_CC(ypred, yperm)
 		if round(Tobs, 10) <= round(Tpi, 10):
 			under += 1
-	print "\nConfidence Interval of p-value:", proportion_confint(under, iterations, alpha, 'beta')
+	print proportion_confint(under, iterations, alpha, 'beta')
 	return (1.0*under) / (1.0*iterations)
 
 #------------- helper functions for Statistics and Statistical Tests ---------------#
@@ -288,7 +288,7 @@ def print_counts_in_block(index, adv, ass):							# returns detailed counts of #
 
 def print_counts(X,y):											# check
 	print "Number of blocks in log: ", X.shape[0]
-	print "Number of agents in a block: ", X.shape[1]
+	print "Number of samples in a block: ", X.shape[1]
 	print "Size of feature vector: ", X.shape[2]
 	print "Total count of features: ", int(sum(sum(sum(X))))
 	ua,uind=np.unique(y,return_inverse=True)
@@ -301,8 +301,8 @@ def print_counts(X,y):											# check
 			counts[y[i][j]] += int(sum(X[i][j]))
 			ucounter[y[i][j]] += np.sign(X[i][j])
 	ucounts = np.sum(np.sign(ucounter), axis=1)
-	print "[treatments] [blocks] [features] [unique-features] :: ", ua, count, counts, ucounts
-	print ""
+	print ucounts
+	print "[treatments] [instances] [features] [uniq] :: ", ua, count, counts, ucounts
 
 
 

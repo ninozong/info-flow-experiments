@@ -7,14 +7,14 @@ from datetime import datetime						# for tagging log with datetime
 from selenium import webdriver						# for running the driver on websites
 from selenium.webdriver.common.proxy import *		# for proxy settings
 
-# from xvfbwrapper import Xvfb						# for creating artificial display buffers to run experiments				
+from xvfbwrapper import Xvfb						# for creating artificial display buffers to run experiments				
 import helper as cole								# functions from collectHelper
 
 import signal										# for timing out external calls
 
 
 LOG_FILE = "log"
-myProxy = "yogi.pdl.cmu.edu:3128"
+myProxy = "proxy.pdl.cmu.edu:8080"
 
 proxy = Proxy({
     'proxyType': ProxyType.MANUAL,
@@ -29,8 +29,8 @@ class TimeoutException(Exception):
 
 class Webdriver(unittest.TestCase):
 	def setUp(self):
-# 		self.vdisplay = Xvfb(width=1280, height=720)
-# 		self.vdisplay.start()
+		self.vdisplay = Xvfb(width=1280, height=720)
+		self.vdisplay.start()
 # 		if(not vdisplay.start()):
 # 			fo = open(LOG_FILE, "a")
 # 			fo.write("Xvfbfailure||"+str(TREATMENTID)+"||"+str(ID)+"\n")
@@ -40,7 +40,7 @@ class Webdriver(unittest.TestCase):
 			if (platform.system()=='Darwin'):
 				self.driver = webdriver.Firefox()
 			elif (platform.system()=='Linux'):
-				self.driver = webdriver.Firefox()
+				self.driver = webdriver.Firefox(proxy=proxy)
 			else:
 				print "Unidentified Platform"
 				sys.exit(0)
@@ -83,7 +83,7 @@ class Webdriver(unittest.TestCase):
 			fo.close()
 
 	def tearDown(self):
-# 		self.vdisplay.stop()
+		self.vdisplay.stop()
 		self.driver.quit()
 
 def shortlist_sites(site, target_file, browser='firefox', timeout=100):

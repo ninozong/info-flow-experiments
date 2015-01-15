@@ -12,9 +12,8 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import svm
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
-
-
-#------------- functions for Machine Learning Analyses ---------------#
+from sklearn.ensemble import ExtraTreesClassifier
+from sklearn.linear_model import RandomizedLogisticRegression
 
 def split_data(X, y, splittype='timed', splitfrac=0.1, verbose=False):	
 	if(splittype == 'rand'):
@@ -36,8 +35,8 @@ def select_and_fit_classifier(nfolds, algos, X_train, y_train, splittype, splitf
 	max_score = 0
 	for algo in algos.keys():
 		score, mPar, clf = crossVal_algo(nfolds, algo, algos[algo], X_train, y_train, splittype, splitfrac, blocked)
-# 		if(verbose):
-# 			print score, mPar
+		if(verbose):
+			print score, mPar
 		if(score > max_score):
 			max_clf = clf
 			max_score = score
@@ -58,7 +57,8 @@ def test_accuracy(clf, X_test, y_test, blocked):
 		
 	return clf.score(X_test, y_test)
 
-def train_and_test(algos, X, y, splittype='timed', splitfrac=0.1, nfolds=10, blocked=1, 
+def train_and_test(algos, X, y, feat, treatnames, feat_choice, nfeat, 
+		splittype='timed', splitfrac=0.1, nfolds=10, blocked=1, 
 		ptest=1, verbose=False):
 	X_train, y_train, X_test, y_test = split_data(X, y, splittype, splitfrac, verbose)
 	if(verbose):
@@ -71,6 +71,14 @@ def train_and_test(algos, X, y, splittype='timed', splitfrac=0.1, nfolds=10, blo
 		print "---Time for selecting classifier: ", str(e-s)
 	print "CVscore: ", CVscore
 	print "Test accuracy: ", test_accuracy(clf, X_test, y_test, blocked)
+	topk0, topk1 = print_top_features(X, y, feat, treatnames, clf, feat_choice, nfeat, blocked)
+# 	print X_test.shape
+# 	print topk0
+# 	print topk1
+# 	for i in range(0, X_test.shape[0]):
+# 		for j in range(0, X_test.shape[1]):
+# 			X_test[i][j][topk0] = 0
+# 	print "New Test accuracy: ", test_accuracy(clf, X_test, y_test, blocked)
 	s = datetime.now()
 	pvalue = stat.block_p_test(X_test, y_test, clf)
 	e = datetime.now()
@@ -121,34 +129,40 @@ def print_top_features(X, y, feat, treatnames, clf, feat_choice, nfeat=5, blocke
 		elif(y_test[i] == 0):
 			Btest = Btest + X_test[i]
 			btest = btest + np.sign(X_test[i])
-	n_classes = clf.coef_.shape[0]
-	if(n_classes == 1):
-		topk1 = np.argsort(clf.coef_[0])[::-1][:nfeat]
+	n_classes = 1#clf.feature_importances_.shape[0]			#`~~~~~~~~~~
+# 	feature_scores = clf.feature_importances_
+	feature_scores = clf.coef_[0]
+	print feature_scores.shape			#`~~~~~~~~~~
+	print np.count_nonzero(feature_scores)
+# 	raw_input("wait")
+	if(n_classes == 1):			#`~~~~~~~~~~
+		topk1 = np.argsort(feature_scores)[::-1][:nfeat]			#`~~~~~~~~~~
 		print "\nFeatures for treatment %s:" %(str(treatnames[1]))
 		for i in topk1:
 			if(feat_choice == 'ads'):
-				feat.choose_by_index(i).printStuff(clf.coef_[0][i], 
+				feat.choose_by_index(i).printStuff(feature_scores[i], 			#`~~~~~~~~~~
 				[Atrain[i], Btrain[i], Atest[i], Btest[i], A[i], B[i]], [atrain[i], btrain[i], atest[i], btest[i], a[i], b[i]])
 			elif(feat_choice == 'words'):
 				print feat[i]
-		topk0 = np.argsort(clf.coef_[0])[:nfeat]
+		topk0 = np.argsort(feature_scores)[:nfeat]			#`~~~~~~~~~~
 		print "\n\nFeatures for treatment %s:" %(str(treatnames[0]))
 		for i in topk0:
 			if(feat_choice == 'ads'):
-				feat.choose_by_index(i).printStuff(clf.coef_[0][i], 
+				feat.choose_by_index(i).printStuff(feature_scores[i], 			#`~~~~~~~~~~
 				[Atrain[i], Btrain[i], Atest[i], Btest[i], A[i], B[i]], [atrain[i], btrain[i], atest[i], btest[i], a[i], b[i]])
 			elif(feat_choice == 'words'):
 				print feat[i]
 	else:
 		for i in range(0,n_classes):
-			topk = np.argsort(clf.coef_[i])[::-1][:nfeat]
+			topk = np.argsort(feature_scores[i])[::-1][:nfeat]			#`~~~~~~~~~~
 			print "Features for treatment %s:" %(str(treatnames[i]))
 			for j in topk:
 				if(feat_choice == 'ads'):
 					feat.choose_by_index(j).display()
 				elif(feat_choice == 'words'):
 					print feat[j]
-			print "coefs: ", clf.coef_[i][topk]
+			print "coefs: ", feature_scores[i][topk]			#`~~~~~~~~~~ replace feature_importances_ with coef_[0]
+	return topk0, topk1
 	
 
 def crossVal_algo(k, algo, params, X, y, splittype, splitfrac, blocked, verbose=False):				# performs cross_validation
@@ -178,6 +192,8 @@ def crossVal_algo(k, algo, params, X, y, splittype, splitfrac, blocked, verbose=
 			if(algo=='kNN'):
 				clf = KNeighborsClassifier(n_neighbors=p[params.keys().index('k')], 
 					warn_on_equidistant=False, p=p[params.keys().index('p')])
+			if(algo=='tree'):
+				clf = ExtraTreesClassifier(n_estimators=p[params.keys().index('ne')], compute_importances=True, random_state=0)
 			if(algo=='linearSVM'):
 				clf = svm.SVC(kernel='linear', C=p[params.keys().index('C')])
 			if(algo=='polySVM'):
@@ -189,6 +205,9 @@ def crossVal_algo(k, algo, params, X, y, splittype, splitfrac, blocked, verbose=
 			if(algo=='logit'):
 				clf = LogisticRegression(penalty=p[params.keys().index('penalty')], dual=False, 
 					C=p[params.keys().index('C')])
+			if(algo=='randlog'):
+				clf = RandomizedLogisticRegression(C=p[params.keys().index('C')])
+# 					(scaling=0.5, sample_fraction=0.75, n_resampling=200, selection_threshold=0.25, tol=0.001, fit_intercept=True, verbose=False, normalize=True, random_state=None, n_jobs=1, pre_dispatch='3*n_jobs', memory=Memory(cachedir=None))
 			clf.fit(X_train, y_train)
 			score += clf.score(X_test, y_test)
 		score /= k
@@ -204,7 +223,9 @@ def run_ml_analysis(X, y, feat, treatnames, feat_choice='ads', nfeat=5, splittyp
 		nfolds=10, blocked=1, ptest=1, verbose=False):				# main function, calls cross_validation, then runs chi2
 
 	algos = {	
-				'logit':{'C':np.logspace(-5.0, 15.0, num=21, base=2), 'penalty':['l2']},
+				'logit':{'C':np.logspace(-5.0, 5.0, num=21, base=2), 'penalty':['l1']},
+# 				'randlog':{'C':np.logspace(-5.0, 15.0, num=21, base=2)},
+# 				'tree':{'ne':np.arange(5,10,2)},
 # 				'svc':{'C':np.logspace(-5.0, 15.0, num=21, base=2)}	
 # 				'kNN':{'k':np.arange(1,20,2), 'p':[1,2,3]}, 
 # 				'polySVM':{'C':np.logspace(-5.0, 15.0, num=21, base=2), 'degree':[1,2,3,4]},
@@ -212,5 +233,5 @@ def run_ml_analysis(X, y, feat, treatnames, feat_choice='ads', nfeat=5, splittyp
 
 				
 			}
-	clf = train_and_test(algos, X, y, splittype, splitfrac, nfolds, blocked, ptest, verbose)
-	print_top_features(X, y, feat, treatnames, clf, feat_choice, nfeat, blocked)
+	clf = train_and_test(algos, X, y, feat, treatnames, feat_choice, nfeat, 
+		splittype, splitfrac, nfolds, blocked, ptest, verbose=True)
