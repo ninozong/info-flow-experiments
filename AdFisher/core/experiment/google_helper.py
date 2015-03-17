@@ -7,24 +7,28 @@ from selenium.webdriver.common.action_chains import ActionChains	# to move mouse
 
 # Google ad settings page class declarations
 
-GENDER_DIV = "sB lR"
-AGE_DIV = "sB ZQ"
-LANGUAGES_DIV = "sB rR"
-INTERESTS_DIV = "sB eS"
-ATTR_SPAN = "wk"
+GENDER_DIV = "EA yP"
+AGE_DIV = "EA mP"
+LANGUAGES_DIV = "EA EP"
+INTERESTS_DIV = "EA rQ"
 
-OPTIN_DIV = "vl Gh hR"
-OPTOUT_DIV = "vl HD Gh"
-EDIT_DIV = "vl Gh c-Ga-bd c-Ga-rd"
-READ_SPAN = "uh"
-RADIO_DIV = "a-u tB ZR"
-SUBMIT_DIV = "c-T-S a-b a-b-A Gs"
+OPTIN_DIV = "hl Dh uP"
+OPTOUT_DIV = "hl LC Dh"
+EDIT_DIV = "hl Dh c-Ha-qd c-Ha-Md"
+RADIO_DIV = "a-u FA mQ"
+SUBMIT_DIV = "c-T-S a-b a-b-A js"
+ATTR_SPAN = "mk"
 
-PREF_INPUT = "gS a-la SL"
-PREF_INPUT_FIRST = "PL ML va"
-PREF_TR = "RL Pr cS"
-PREF_TD = "Gu dS"
-PREF_OK_DIV = "c-T-S a-b a-b-A WK ED"
+LANG_DROPDOWN = "c-T-S c-g-f-b a-oa Cr"
+LANG_DIV = "c-l"
+
+PREF_INPUT = "tQ a-la CK"
+PREF_INPUT_FIRST = "zK wK va"
+PREF_TR = "BK yr pQ"
+PREF_TD = "Yt qQ"
+PREF_OK_DIV = "c-T-S a-b a-b-A GJ IC"
+
+SIGNIN_A = "gb_70"
 
 # strip html
 
@@ -65,13 +69,14 @@ def optOut(driver, id, treatmentid, LOG_FILE):													# Opt out of behavior
 	if(id != -1):
 		log("optedOut||"+str(treatmentid), id, LOG_FILE)
 
-def login2Google(username, password, driver):
-	driver.find_element_by_xpath(".//a[span[span[@class='gbit']]]").click()
+def login(username, password, driver, id, treatmentid, LOG_FILE):
+	driver.set_page_load_timeout(60)
+	driver.get("https://www.google.com")
+	driver.find_element_by_xpath(".//a[@id='"+SIGNIN_A+"']").click()
 	driver.find_element_by_id("Email").send_keys(username)
 	driver.find_element_by_id("Passwd").send_keys(password)
 	driver.find_element_by_id("signIn").click()
-	driver.find_element_by_id("gbi4i").click()
-	driver.find_element_by_id("gb_71").click()
+	log("loggedIn="+"@".join(username)+"||"+str(treatmentid), id, LOG_FILE)
 
 def get_gender(driver):												# Read gender from Google Ad Settings
 	try:
@@ -157,6 +162,18 @@ def set_age(age, driver, id, treatmentid, LOG_FILE):										# Set age on Googl
 	box.click()
 	gdiv.find_element_by_xpath(".//div[@class='"+SUBMIT_DIV+"']").click()
 	log("setAge="+str(age)+"||"+str(treatmentid), id, LOG_FILE)
+	
+def set_language(language, driver, id, treatmentid, LOG_FILE):										# Set age on Google Ad Settings page
+	driver.set_page_load_timeout(40)
+	driver.get("https://www.google.com/settings/ads")
+	gdiv = driver.find_element_by_xpath(".//div[@class='"+LANGUAGES_DIV+"']")
+# 	print gdiv.get_attribute("innerHTML")
+	gdiv.find_element_by_xpath(".//div[@class='"+EDIT_DIV+"']").click()
+	gdiv.find_element_by_xpath(".//div[@class='"+LANG_DROPDOWN+"']").click()
+	time.sleep(3)
+	gdiv.find_element_by_xpath(".//div[@class='"+LANG_DIV+"'][contains(.,'"+language+"')]").click()
+	gdiv.find_element_by_xpath(".//div[@class='"+SUBMIT_DIV+"']").click()
+	log("setLanguage="+str(language)+"||"+str(treatmentid), id, LOG_FILE)
 
 
 def remove_ad_pref(pref, driver, id, treatmentid, LOG_FILE):
